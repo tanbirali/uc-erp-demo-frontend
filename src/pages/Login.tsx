@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const {
@@ -11,6 +12,7 @@ const Login = () => {
   } = useForm();
 
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const onSubmit = async (data: any) => {
     if (!data.username || !data.password) {
@@ -21,8 +23,12 @@ const Login = () => {
       console.error("Password must be at least 8 characters long");
       return;
     }
-    const response = await login(data.username, data.password);
-    console.log(response);
+    try {
+      await login(data.username, data.password);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Login failed", error);
+    }
   };
 
   const [showPassword, setShowPassword] = useState(false);
