@@ -2,6 +2,14 @@ import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  if (!user) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen">
+        <h1 className="text-3xl">You are not logged in.</h1>
+        <p className="text-xl">Please log in to access the dashboard.</p>
+      </div>
+    );
+  }
   return (
     <div>
       <div className="flex flex-col justify-center items-center min-h-screen">
