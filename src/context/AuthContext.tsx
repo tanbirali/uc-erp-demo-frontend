@@ -1,0 +1,96 @@
+import { createContext, useContext, useState } from "react";
+import { login as loginApi, register as registerApi } from "../api/auth";
+
+export interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  gender?: string;
+  avatar?: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (formData: FormData) => Promise<void>;
+  logout: () => void;
+  setUser: (user: User | null) => void;
+  setToken: (token: string | null) => void;
+}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const login = async (email: string, password: string) => {
+    // Implement login logic here
+    try {
+      setIsLoading(true);
+      const response = await loginApi(email, password);
+      setUser(response.result.user);
+      setToken(response.result.token);
+      localStorage.setItem("erp_token", response.result.token);
+      localStorage.setItem("erp_user", response.result.user);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (formData: FormData) => {
+    try {
+      setIsLoading(true);
+      const response = await registerApi(formData);
+      setUser(response.result.user);
+      setToken(response.result.token);
+      localStorage.setItem("erp_token", response.result.token);
+      localStorage.setItem("erp_user", response.result.user);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("erp_token");
+    localStorage.removeItem("erp_user");
+    setUser(null);
+    setToken(null);
+  };
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col justify-center items-center">
+        Loading...
+      </div>
+    );
+  }
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        login,
+        logout,
+        setUser,
+        setToken,
+        register,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
