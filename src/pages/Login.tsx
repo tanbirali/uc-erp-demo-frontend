@@ -4,6 +4,10 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+// Note: Replace 'your-background-image-url.jpg' with the actual URL or path to your image
+const BACKGROUND_IMAGE_URL =
+  "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+
 const Login = () => {
   const {
     register,
@@ -15,6 +19,8 @@ const Login = () => {
   const navigate = useNavigate();
 
   const onSubmit = async (data: any) => {
+    // You should use react-hook-form's built-in validation for better user experience
+    // but keeping the current console errors for structure clarity.
     if (!data.username || !data.password) {
       console.error("Username and password are required");
       return;
@@ -24,69 +30,137 @@ const Login = () => {
       return;
     }
     try {
+      // Assuming 'login' is a mock or an actual async function
       await login(data.username, data.password);
       navigate("/dashboard");
     } catch (error) {
       console.error("Login failed", error);
+      // **TODO: Add user-facing error state here (e.g., using a state variable)**
     }
   };
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const togglePasswordVisibility = () => {
+  const togglePasswordVisibility = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent button from submitting the form
     setShowPassword(!showPassword);
   };
+
   return (
-    <div className="min-h-screen w-full flex justify-center items-center bg-gray-100">
+    // 1. Responsive Background and Centering
+    <div
+      className="min-h-screen w-full flex justify-center items-center p-4"
+      style={{
+        backgroundImage: `url(${BACKGROUND_IMAGE_URL})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* 2. Responsive Card Container */}
       <div
-        className="flex flex-col justify-center items-center h-full border rounded-2xl border-gray-300 
-      p-8 bg-white shadow-md"
+        className="w-full max-w-sm md:max-w-md lg:max-w-lg
+                      bg-white/90 backdrop-blur-sm p-8 rounded-2xl 
+                      shadow-2xl border border-gray-200 transform transition-all 
+                      duration-500 hover:shadow-3xl"
       >
-        <h1 className="text-3xl font-semibold mb-6">Login Page</h1>
-        <form
-          className="flex flex-col gap-4 w-80"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <label htmlFor="username">Username:</label>
-          <input
-            type="email"
-            {...register("username", { required: true })}
-            placeholder="Username"
-            className="p-2 border border-gray-300 rounded outline-none w-full"
-          />
-          {errors.username && (
-            <p className="text-red-500">Username is required</p>
-          )}
-          <label htmlFor="password">Password:</label>
-          <div className="flex items-center w-full border border-gray-300 rounded">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-8 text-gray-800">
+          Welcome Back!
+        </h1>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+          {/* Username Input */}
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Email Address:
+            </label>
             <input
-              type={showPassword ? "text" : "password"}
-              {...register("password", { required: true })}
-              placeholder="Password"
-              className="p-2  w-full outline-none"
+              id="username"
+              type="email"
+              {...register("username", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
+                  message: "Invalid email address",
+                },
+              })}
+              placeholder="your.email@example.com"
+              className="p-3 border border-gray-300 rounded-lg outline-none w-full 
+                                  focus:ring-blue-500 focus:border-blue-500 transition duration-150"
             />
-            <button onClick={togglePasswordVisibility} className="px-2">
-              {showPassword ? (
-                <EyeOffIcon className="h-5 w-5 text-gray-500" />
-              ) : (
-                <EyeIcon className="h-5 w-5 text-gray-500" />
-              )}
-            </button>
+            {errors.username && (
+              <p className="text-red-500 text-sm mt-1">
+                {"Username is required"}
+              </p>
+            )}
           </div>
-          {errors.password && (
-            <p className="text-red-500">Password is required</p>
-          )}
+
+          {/* Password Input */}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Password:
+            </label>
+            <div
+              className="flex items-center w-full border border-gray-300 rounded-lg 
+                                    focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 
+                                    transition duration-150"
+            >
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 8,
+                    message: "Password must be at least 8 characters",
+                  },
+                })}
+                placeholder="••••••••"
+                className="p-3 w-full outline-none bg-transparent"
+              />
+              <button
+                type="button" // Important: set to type="button" to prevent form submission
+                onClick={togglePasswordVisibility}
+                className="px-3 text-gray-500 hover:text-gray-700 transition"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOffIcon className="h-5 w-5" />
+                ) : (
+                  <EyeIcon className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {"Password is required"}
+              </p>
+            )}
+          </div>
+
+          {/* Submit Button */}
           <button
             type="submit"
-            className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 hover:cursor-pointer"
+            className="mt-4 bg-blue-600 text-white p-3 rounded-lg font-semibold 
+                              hover:bg-blue-700 transition duration-150 ease-in-out 
+                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Login
+            Sign In
           </button>
         </form>
-        <div className="my-4 flex items-center justify-center ">
-          <p>
+
+        {/* Register Link */}
+        <div className="mt-6 text-center text-sm">
+          <p className="text-gray-600">
             Don't have an account?{" "}
-            <a href="/register" className="text-blue-500 hover:underline">
+            <a
+              href="/register"
+              className="text-blue-600 font-medium hover:text-blue-700 hover:underline transition duration-150"
+            >
               Register here.
             </a>
           </p>

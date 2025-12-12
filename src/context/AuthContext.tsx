@@ -18,6 +18,8 @@ export interface AuthContextType {
   logout: () => void;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
+  companyId?: string;
+  storeCompanyId?: (id: string) => void;
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -32,6 +34,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
   const login = async (email: string, password: string) => {
@@ -64,7 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     }
   };
-
   const logout = () => {
     localStorage.removeItem("erp_token");
     localStorage.removeItem("erp_user");
@@ -78,6 +80,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
+  const storeCompanyId = (id: string) => {
+    setCompanyId(id);
+  };
   return (
     <AuthContext.Provider
       value={{
@@ -88,6 +93,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser,
         setToken,
         register,
+        companyId,
+        storeCompanyId,
       }}
     >
       {children}

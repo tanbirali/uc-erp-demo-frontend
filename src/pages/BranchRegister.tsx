@@ -1,247 +1,449 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+// Import necessary types from react-hook-form
+import {
+  useForm,
+  type UseFormRegister,
+  type FieldErrors,
+  type FieldValues,
+} from "react-hook-form";
+import { MapPin, Settings } from "lucide-react";
+import { useNavigate } from "react-router";
+import { registerBranch } from "../api/onboarding";
+import { useAuth } from "../context/AuthContext";
+
+// --- TYPE DEFINITIONS ---
+type BranchFormData = {
+  organisationName: string;
+  industry: string;
+  state: string;
+  buildingNumber: string;
+  address: string;
+  zipCode: string;
+  district: string;
+  city: string;
+  currency: string;
+  language: string;
+  timezone: string;
+  // These fields are optional in the form, but need to be included in the type
+  vatNumber?: string;
+  taxRegisteredNumber?: string;
+};
+
+// Internal Props interface for the InputField (it will use closure for register and errors)
+interface InputFieldInternalProps {
+  id: keyof BranchFormData; // Ensures id is one of the keys in the form data
+  label: string;
+  placeholder: string;
+  type?: "text" | "select" | "number" | "email"; // Enforce valid HTML/select types
+  requiredMessage?: string;
+  options?: any;
+}
+
+const BACKGROUND_IMAGE_URL =
+  "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+
 const BranchRegister = () => {
+  // Apply the type definition to useForm
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+    trigger,
+    unregister,
+  } = useForm<BranchFormData>();
 
+  const navigate = useNavigate();
   const [isVatRegistered, setIsVatRegistered] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null); // Retrieve token and companyId from AuthContext
 
-  const onSubmit = (data: any) => {
-    console.log(data);
-  };
+  const { token, companyId } = useAuth(); // --- Conditional VAT/Tax Logic ---
+
+  const handleVatToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setIsVatRegistered(isChecked);
+
+    if (!isChecked) {
+      unregister("vatNumber");
+      unregister("taxRegisteredNumber");
+    }
+  }; // --- Submission Logic (Now correctly typed) ---
+
+  const onSubmit = async (data: BranchFormData) => {
+    setLoading(true);
+    setSubmissionError(null);
+
+    // Guard Clause for missing required auth data
+    if (!companyId || !token) {
+      setSubmissionError(
+        "Authentication error: Missing Company ID or Token. Please log in."
+      );
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const payload = {
+        company_id: companyId, // Used the stored companyId
+        name: data.organisationName,
+        industry: data.industry,
+        state: data.state,
+        building_number: data.buildingNumber,
+        street: data.address,
+        zip_code: data.zipCode,
+        district: data.district,
+        city: data.city,
+        currency: data.currency,
+        language: data.language,
+        time_zone: data.timezone,
+        is_vat_registered: isVatRegistered, // Conditional data handling: ensure non-required fields are only sent if toggled
+        tax_registration_number: isVatRegistered
+          ? data.taxRegisteredNumber || ""
+          : "",
+        vat_registered_number: isVatRegistered ? data.vatNumber || "" : "",
+      };
+
+      const response = await registerBranch(payload, token);
+      console.log("Branch registration response:", response);
+
+      // Check for success based on typical API response structure
+      if (response && response.status === "success") {
+        navigate("/dashboard");
+      } else {
+        setSubmissionError(
+          response?.message ||
+            "Branch registration failed due to an unknown API error."
+        );
+      }
+    } catch (error: any) {
+      console.error("Branch registration failed:", error);
+      setSubmissionError(
+        error.message || "A network error occurred. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }; // Function to render a styled input field (using closure for register/errors)
+
+  const InputField: React.FC<InputFieldInternalProps> = ({
+    id,
+    label,
+    placeholder,
+    type = "text",
+    requiredMessage,
+    options = {},
+  }) => (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+           {" "}
+      {type === "select" ? (
+        <select
+          id={id}
+          className="p-3 border border-gray-300 rounded-lg outline-none w-full bg-white
+ focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+          // Register function from the outer scope is used here (closure)
+          {...register(id, {
+            required: requiredMessage ? requiredMessage : false,
+            ...options,
+          })}
+        >
+          {placeholder && <option value="">{placeholder}</option>}
+          {options.selectOptions.map(
+            (option: { value: string; label: string }) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            )
+          )}
+        </select>
+      ) : (
+        <input
+          id={id}
+          type={type}
+          placeholder={placeholder}
+          className="p-3 border border-gray-300 rounded-lg outline-none w-full 
+                     focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+          // Register function from the outer scope is used here (closure)
+          {...register(id, {
+            required: requiredMessage ? requiredMessage : false,
+            ...options,
+          })}
+        />
+      )}
+           {" "}
+      {errors[id] && (
+        <p className="text-red-500 text-sm mt-1">
+                   {" "}
+          {errors[id]?.message?.toString() ||
+            requiredMessage ||
+            "This field is required."}
+                 {" "}
+        </p>
+      )}
+         {" "}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen w-full flex justify-center items-center bg-gray-100 p-10">
+    // 1. Responsive Background and Centering
+    <div
+      className="min-h-screen w-full flex justify-center items-center p-4"
+      style={{
+        backgroundImage: `url(${BACKGROUND_IMAGE_URL})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* 2. Responsive Card Container */}{" "}
       <div
-        className="flex flex-col justify-center items-start h-full border rounded-2xl border-gray-300 
-      p-8 bg-white shadow-md md:w-2xl"
+        className="w-full max-w-4xl bg-white/95 backdrop-blur-sm p-6 sm:p-10 rounded-2xl 
+              shadow-2xl border border-gray-200"
       >
-        <h1 className="text-center mx-auto text-xl font-bold">
-          Setup your branch
-        </h1>
-        <div className="my-4 flex flex-col items-start w-full gap-3">
-          <div className="flex flex-col gap-2 w-full">
-            <label htmlFor="organisationName">Organisation Name</label>
-            <input
-              type="text"
-              placeholder="Organisation Name"
-              className="p-2 border border-gray-300 rounded outline-none w-full  "
-              {...register("organisationName", { required: true })}
-            />
-            {errors.organisationName && (
-              <p className="text-red-500">Organisation Name is required</p>
+        {/* Header and Onboarding Step Indicator */}{" "}
+        <div className="flex flex-col items-center mb-10 text-center">
+          <MapPin className="h-10 w-10 text-green-600 mb-3" />{" "}
+          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">
+            Register Your First Branch{" "}
+          </h1>
+                   {" "}
+          <p className="text-gray-500 mt-2 text-lg">
+                        Step 2 of 2: Provide the core details and location.    
+                 {" "}
+          </p>
+                 {" "}
+        </div>
+               {" "}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-8 w-full"
+        >
+          {/* --- Section 1: General & Location --- */}{" "}
+          <div className="border-b pb-6 border-gray-200">
+            {" "}
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-green-600" /> Branch Details &
+              Address{" "}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              {/* Organisation Name */}
+              <InputField
+                id="organisationName"
+                label="Branch/Location Name"
+                placeholder="Headquarters"
+                requiredMessage="Branch Name is required"
+              />
+              {/* Industry */}{" "}
+              <InputField
+                id="industry"
+                label="Industry"
+                type="select"
+                placeholder="Select Industry"
+                requiredMessage="Industry is required"
+                options={{
+                  selectOptions: [
+                    { value: "technology", label: "Technology" },
+                    { value: "finance", label: "Finance" },
+                    { value: "healthcare", label: "Healthcare" },
+                    { value: "retail", label: "Retail" },
+                  ],
+                }}
+              />
+              {/* Building Number */}{" "}
+              <InputField
+                id="buildingNumber"
+                label="Building/Unit Number"
+                placeholder="Unit 101"
+                requiredMessage="Building Number is required"
+              />
+              {/* Street */}{" "}
+              <InputField
+                id="address"
+                label="Street Address"
+                placeholder="123 Main Street"
+                requiredMessage="Street is required"
+              />
+              {/* City */}{" "}
+              <InputField
+                id="city"
+                label="City"
+                placeholder="City Name"
+                requiredMessage="City is required"
+              />
+              {/* District */}{" "}
+              <InputField
+                id="district"
+                label="District/Area"
+                placeholder="Downtown"
+                requiredMessage="District is required"
+              />
+              {/* State */}{" "}
+              <InputField
+                id="state"
+                label="State/Province"
+                type="select"
+                placeholder="Select State"
+                requiredMessage="State is required"
+                options={{
+                  selectOptions: [
+                    { value: "california", label: "California" },
+                    { value: "texas", label: "Texas" },
+                    { value: "new_york", label: "New York" },
+                    { value: "florida", label: "Florida" },
+                  ],
+                }}
+              />
+              {/* Zip Code */}{" "}
+              <InputField
+                id="zipCode"
+                label="Zip/Postal Code"
+                placeholder="10001"
+                requiredMessage="Zip Code is required"
+              />
+            </div>
+          </div>
+          {/* --- Section 2: Settings & Preferences --- */}
+          <div className="border-b pb-6 border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <Settings className="h-5 w-5 text-blue-600" /> Settings{" "}
+            </h2>{" "}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
+              {/* Time Zone */}
+              <InputField
+                id="timezone"
+                label="Time Zone"
+                type="select"
+                placeholder="Select Time Zone"
+                requiredMessage="Time Zone is required"
+                options={{
+                  selectOptions: [
+                    { value: "gmt+5.5", label: "GMT+5:30 (India)" },
+                    { value: "gmt-5", label: "GMT-5 (EST)" },
+                    { value: "gmt+0", label: "GMT+0 (London)" },
+                    { value: "gmt+3", label: "GMT+3" },
+                  ],
+                }}
+              />
+              {/* Currency */}
+              <InputField
+                id="currency"
+                label="Default Currency"
+                type="select"
+                placeholder="Select Currency"
+                requiredMessage="Currency is required"
+                options={{
+                  selectOptions: [
+                    { value: "usd", label: "USD ($)" },
+                    { value: "eur", label: "EUR (€)" },
+                    { value: "gbp", label: "GBP (£)" },
+                    { value: "inr", label: "INR (₹)" },
+                  ],
+                }}
+              />
+              {/* Language */}
+              <InputField
+                id="language"
+                label="Default Language"
+                type="select"
+                placeholder="Select Language"
+                requiredMessage="Language is required"
+                options={{
+                  selectOptions: [
+                    { value: "english", label: "English" },
+                    { value: "spanish", label: "Spanish" },
+                    { value: "french", label: "French" },
+                    { value: "german", label: "German" },
+                  ],
+                }}
+              />{" "}
+            </div>
+          </div>
+          {/* --- Section 3: VAT / Tax Registration (Conditional) --- */}
+          <div className="flex flex-col gap-4">
+            {" "}
+            <div className="flex items-center">
+              <input
+                id="isVatRegistered"
+                type="checkbox"
+                className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                checked={isVatRegistered}
+                onChange={handleVatToggle}
+              />
+
+              <label
+                htmlFor="isVatRegistered"
+                className="ml-3 text-base font-medium text-gray-700"
+              >
+                Is your organization VAT/Tax Registered?
+              </label>
+            </div>
+            {isVatRegistered && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-4 border border-blue-200 rounded-lg bg-blue-50 transition-all duration-300">
+                {/* VAT Number */}
+                <InputField
+                  id="vatNumber"
+                  label="VAT/Tax Number"
+                  placeholder="Enter Tax ID"
+                  requiredMessage="VAT/Tax Number is required"
+                  options={{
+                    required: "VAT/Tax Number is required",
+                    onBlur: () => trigger("vatNumber"),
+                  }}
+                />
+                {/* Tax Registered Number */}
+                <InputField
+                  id="taxRegisteredNumber"
+                  label="Tax Registration Document ID"
+                  placeholder="Enter document ID"
+                  requiredMessage="Tax Registration ID is required"
+                  options={{
+                    required: "Tax Registration ID is required",
+                    onBlur: () => trigger("taxRegisteredNumber"),
+                  }}
+                />
+              </div>
             )}
           </div>
-          <div className="gap-2 flex flex-col w-full md:flex-row items-center">
-            <div className="flex flex-col gap-2 w-full ">
-              <label htmlFor="industry">Industry</label>
-              <select
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("industry", { required: true })}
-              >
-                <option value="">Select Industry</option>
-                <option value="technology">Technology</option>
-                <option value="finance">Finance</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="education">Education</option>
-                <option value="retail">Retail</option>
-              </select>
-              {errors.industry && (
-                <p className="text-red-500">Industry is required</p>
-              )}
+          {/* Submission Error Display */}
+          {submissionError && (
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+              role="alert"
+            >
+              <span className="block sm:inline font-medium">
+                Submission Failed:
+              </span>{" "}
+              {submissionError}
             </div>
-            <div className="flex flex-col gap-2 w-full ">
-              <label htmlFor="buildingNumber">Building Number</label>
-              <input
-                type="text"
-                placeholder="Building Number"
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("buildingNumber", { required: true })}
-              />
-              {errors.buildingNumber && (
-                <p className="text-red-500">Building Number is required</p>
-              )}
-            </div>
+          )}
+                    {/* Submit Button */}         {" "}
+          <button
+            type="submit"
+            className={`mt-4 w-full p-3 rounded-lg font-semibold transition duration-150 ease-in-out 
+                       focus:outline-none focus:ring-2 focus:ring-offset-2
+                      ${
+                        loading
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500"
+                      }`}
+            disabled={loading}
+          >
+            {loading
+              ? "Submitting Branch Details..."
+              : "Finalize Setup & Continue"}
+          </button>
+          {/* Optional Back Button */}
+          <div className="text-center mt-2">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="text-gray-500 hover:text-gray-700 text-sm underline"
+            >
+              Go back to Company registration
+            </button>
           </div>
-          <div className="w-full flex flex-col gap-3 md:flex-row items-center ">
-            <div className="flex flex-col w-full gap-2">
-              <label htmlFor="country">Time Zone</label>
-              <select
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("timezone", { required: true })}
-              >
-                <option value="">Select Time Zone</option>
-                <option value="gmt+3">GMT+3</option>
-                <option value="gmt-5">GMT-5</option>
-                <option value="gmt+0">GMT+0</option>
-                <option value="gmt+10">GMT+10</option>
-                <option value="gmt+5.5">GMT+5.5</option>
-              </select>
-              {errors.timezone && (
-                <p className="text-red-500">Time Zone is required</p>
-              )}
-            </div>
-            <div className="gap-4 w-full flex flex-col ">
-              <label htmlFor="state">State</label>
-              <select
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("state", { required: true })}
-              >
-                <option value="">Select State</option>
-                <option value="california">California</option>
-                <option value="texas">Texas</option>
-                <option value="new_york">New York</option>
-                <option value="florida">Florida</option>
-                <option value="illinois">Illinois</option>
-              </select>
-              {errors.state && (
-                <p className="text-red-500">State is required</p>
-              )}
-            </div>
-          </div>
-
-          <div className="w-full flex flex-col gap-3 md:flex-row items-center ">
-            <div className="gap-4 w-full flex flex-col ">
-              <label htmlFor="city">City</label>
-              <input
-                type="text"
-                placeholder="City"
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("city", { required: true })}
-              />
-              {errors.city && <p className="text-red-500">City is required</p>}
-            </div>
-            <div className="w-full gap-4 flex flex-col">
-              <label htmlFor="address">Street</label>
-              <input
-                type="text"
-                placeholder="Street"
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("address", { required: true })}
-              />
-              {errors.address && (
-                <p className="text-red-500">Street is required</p>
-              )}
-            </div>
-          </div>
-          <div className="w-full flex flex-col gap-3 md:flex-row items-center ">
-            <div className="gap-4 w-full flex flex-col ">
-              <label htmlFor="city">District</label>
-              <input
-                type="text"
-                placeholder="District"
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("district", { required: true })}
-              />
-              {errors.district && (
-                <p className="text-red-500">District is required</p>
-              )}
-            </div>
-            <div className="w-full gap-4 flex flex-col">
-              <label htmlFor="address">Zip Code</label>
-              <input
-                type="text"
-                placeholder="Zip Code"
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("zipCode", { required: true })}
-              />
-              {errors.zipCode && (
-                <p className="text-red-500">Zip Code is required</p>
-              )}
-            </div>
-          </div>
-          <div className="w-full flex flex-col gap-3 md:flex-row items-center ">
-            <div className="gap-4 w-full flex flex-col ">
-              <label htmlFor="currency">Currency</label>
-              <select
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("currency", { required: true })}
-              >
-                <option value="">Select Currency</option>
-                <option value="usd">USD</option>
-                <option value="eur">EUR</option>
-                <option value="gbp">GBP</option>
-                <option value="inr">INR</option>
-                <option value="jpy">JPY</option>
-              </select>
-              {errors.currency && (
-                <p className="text-red-500">Currency is required</p>
-              )}
-            </div>
-            <div className="w-full gap-4 flex flex-col">
-              <label htmlFor="language">Language</label>
-              <select
-                className="p-2 border border-gray-300 rounded outline-none w-full"
-                {...register("language", { required: true })}
-              >
-                <option value="">Select Language</option>
-                <option value="english">English</option>
-                <option value="spanish">Spanish</option>
-                <option value="french">French</option>
-                <option value="german">German</option>
-                <option value="chinese">Chinese</option>
-                <option value="arabic">Arabic</option>
-              </select>
-              {errors.language && (
-                <p className="text-red-500">Language is required</p>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col w-full ">
-            <div className="flex items-center gap-2 mt-4">
-              <input
-                type="checkbox"
-                className="w-4 h-4"
-                checked={isVatRegistered}
-                onChange={() => setIsVatRegistered(!isVatRegistered)}
-              />
-              <label htmlFor="vat">Vat Registered</label>
-            </div>
-            <div className="w-full flex  ">
-              {isVatRegistered && (
-                <div className="flex flex-col md:flex-row gap-2 w-full ">
-                  <div className="flex flex-col gap-2 w-full ">
-                    <label htmlFor="vatNumber">Vat Number</label>
-                    <input
-                      type="text"
-                      placeholder="Vat Number"
-                      className="p-2 border border-gray-300 rounded outline-none w-full"
-                      {...register("vatNumber", { required: isVatRegistered })}
-                    />
-                    {errors.vatNumber && (
-                      <p className="text-red-500">Vat Number is required</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2 w-full ">
-                    <label htmlFor="taxPercentage">Tax Registered Number</label>
-                    <input
-                      type="text"
-                      placeholder="Tax Registered Number"
-                      className="p-2 border border-gray-300 rounded outline-none w-full"
-                      {...register("taxRegisteredNumber", {
-                        required: isVatRegistered,
-                      })}
-                    />
-                    {errors.taxRegisteredNumber && (
-                      <p className="text-red-500">
-                        Tax Registered Number is required
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={handleSubmit(onSubmit)}
-          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 hover:cursor-pointer mx-auto w-full "
-        >
-          Get Started
-        </button>
+        </form>
       </div>
     </div>
   );
