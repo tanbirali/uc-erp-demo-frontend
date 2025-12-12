@@ -1,11 +1,6 @@
 import { useState } from "react";
 // Import necessary types from react-hook-form
-import {
-  useForm,
-  type UseFormRegister,
-  type FieldErrors,
-  type FieldValues,
-} from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { MapPin, Settings } from "lucide-react";
 import { useNavigate } from "react-router";
 import { registerBranch } from "../api/onboarding";
