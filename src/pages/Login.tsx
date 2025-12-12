@@ -4,10 +4,6 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-// Note: Replace 'your-background-image-url.jpg' with the actual URL or path to your image
-const BACKGROUND_IMAGE_URL =
-  "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
-
 const Login = () => {
   const {
     register,
@@ -15,7 +11,7 @@ const Login = () => {
     formState: { errors },
   } = useForm();
 
-  const { login } = useAuth();
+  const { isLoading, login } = useAuth();
   const navigate = useNavigate();
 
   const onSubmit = async (data: any) => {
@@ -152,7 +148,7 @@ const Login = () => {
                               hover:bg-blue-700 transition duration-150 ease-in-out 
                               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Sign In
+            {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
 
