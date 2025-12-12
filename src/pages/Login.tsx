@@ -45,15 +45,18 @@ const Login = () => {
     e.preventDefault(); // Prevent button from submitting the form
     setShowPassword(!showPassword);
   };
-
+  const complexGradientStyle = {
+    backgroundImage: `
+      linear-gradient(transparent, white), 
+      radial-gradient(at center top, rgb(21, 94, 117) 0%, rgb(45, 212, 191) 60%, rgb(255, 255, 255) 100%)
+    `,
+  };
   return (
     // 1. Responsive Background and Centering
     <div
       className="min-h-screen w-full flex justify-center items-center p-4"
       style={{
-        backgroundImage: `url(${BACKGROUND_IMAGE_URL})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        ...complexGradientStyle,
       }}
     >
       {/* 2. Responsive Card Container */}

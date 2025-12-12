@@ -40,7 +40,7 @@ export interface BranchRegistrationData {
 
 export const registerBranch = async (body: any, token: string) => {
   console.log("Registering branch with", body);
-  const response = await fetch(`${URL}/api/v1/branch/register`, {
+  const response = await fetch(`${URL}/api/v1/branches`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

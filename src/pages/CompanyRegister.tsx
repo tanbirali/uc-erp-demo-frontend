@@ -6,8 +6,6 @@ import { BriefcaseBusiness } from "lucide-react"; // A relevant icon
 import { useState } from "react";
 
 // Note: Using an image related to business or work setup
-const BACKGROUND_IMAGE_URL =
-  "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
 const CompanyRegister = () => {
   const {
@@ -37,7 +35,6 @@ const CompanyRegister = () => {
       setLoading(false);
       return;
     }
-    console.log(data);
 
     try {
       const response = await registerCompany(
@@ -46,7 +43,7 @@ const CompanyRegister = () => {
         authToken
       );
       if (storeCompanyId) {
-        storeCompanyId(response.company_id); // Store company name in context if needed
+        storeCompanyId(response.result[0].company_id); // Store company name in context if needed
       }
 
       console.log("Company registration response:", response);
@@ -67,15 +64,18 @@ const CompanyRegister = () => {
       setLoading(false);
     }
   };
-
+  const complexGradientStyle = {
+    backgroundImage: `
+      linear-gradient(transparent, white), 
+      radial-gradient(at center top, rgb(21, 94, 117) 0%, rgb(45, 212, 191) 60%, rgb(255, 255, 255) 100%)
+    `,
+  };
   return (
     // 1. Responsive Background and Centering
     <div
-      className="min-h-screen w-full flex justify-center items-center p-4"
+      className="min-h-screen w-full flex justify-center items-center p-4 "
       style={{
-        backgroundImage: `url(${BACKGROUND_IMAGE_URL})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        ...complexGradientStyle,
       }}
     >
       {/* 2. Responsive Card Container */}

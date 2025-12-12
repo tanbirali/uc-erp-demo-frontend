@@ -34,9 +34,6 @@ interface InputFieldInternalProps {
   options?: any;
 }
 
-const BACKGROUND_IMAGE_URL =
-  "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
-
 const BranchRegister = () => {
   // Apply the type definition to useForm
   const {
@@ -102,7 +99,7 @@ const BranchRegister = () => {
       console.log("Branch registration response:", response);
 
       // Check for success based on typical API response structure
-      if (response && response.status === "success") {
+      if (response && response.msg === "success") {
         navigate("/dashboard");
       } else {
         setSubmissionError(
@@ -132,12 +129,11 @@ const BranchRegister = () => {
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
         {label}
       </label>
-           {" "}
       {type === "select" ? (
         <select
           id={id}
           className="p-3 border border-gray-300 rounded-lg outline-none w-full bg-white
- focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+         focus:ring-blue-500 focus:border-blue-500 transition duration-150"
           // Register function from the outer scope is used here (closure)
           {...register(id, {
             required: requiredMessage ? requiredMessage : false,
@@ -159,7 +155,7 @@ const BranchRegister = () => {
           type={type}
           placeholder={placeholder}
           className="p-3 border border-gray-300 rounded-lg outline-none w-full 
-                     focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+          focus:ring-blue-500 focus:border-blue-500 transition duration-150"
           // Register function from the outer scope is used here (closure)
           {...register(id, {
             required: requiredMessage ? requiredMessage : false,
@@ -170,26 +166,24 @@ const BranchRegister = () => {
            {" "}
       {errors[id] && (
         <p className="text-red-500 text-sm mt-1">
-                   {" "}
           {errors[id]?.message?.toString() ||
             requiredMessage ||
             "This field is required."}
-                 {" "}
         </p>
       )}
-         {" "}
     </div>
   );
-
+  const complexGradientStyle = {
+    backgroundImage: `
+      linear-gradient(transparent, white), 
+      radial-gradient(at center top, rgb(21, 94, 117) 0%, rgb(45, 212, 191) 60%, rgb(255, 255, 255) 100%)
+    `,
+  };
   return (
     // 1. Responsive Background and Centering
     <div
-      className="min-h-screen w-full flex justify-center items-center p-4"
-      style={{
-        backgroundImage: `url(${BACKGROUND_IMAGE_URL})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className="min-h-screen w-full flex justify-center items-center p-4 "
+      style={{ ...complexGradientStyle }}
     >
       {/* 2. Responsive Card Container */}{" "}
       <div

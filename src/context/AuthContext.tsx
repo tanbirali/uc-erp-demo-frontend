@@ -11,6 +11,7 @@ export interface User {
 }
 
 export interface AuthContextType {
+  isLoading: boolean;
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
@@ -73,19 +74,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     setToken(null);
   };
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen flex-col justify-center items-center">
-        Loading...
-      </div>
-    );
-  }
+
   const storeCompanyId = (id: string) => {
     setCompanyId(id);
   };
   return (
     <AuthContext.Provider
       value={{
+        isLoading,
         user,
         token,
         login,
