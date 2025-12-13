@@ -5,8 +5,6 @@ export const registerCompany = async (
   userId: string,
   token: string
 ) => {
-  console.log("Registering company with", { companyName, userId });
-
   const response = await fetch(`${URL}/api/v1/company/register`, {
     method: "POST",
     headers: {
@@ -39,7 +37,6 @@ export interface BranchRegistrationData {
 }
 
 export const registerBranch = async (body: any, token: string) => {
-  console.log("Registering branch with", body);
   const response = await fetch(`${URL}/api/v1/branches`, {
     method: "POST",
     headers: {

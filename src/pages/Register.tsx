@@ -26,7 +26,6 @@ const Register = () => {
   const onSubmit = async (data: any) => {
     // Note: Most of these checks are now handled more cleanly by react-hook-form validation
     setRegistrationError(""); // Clear previous errors
-    console.log(data);
 
     try {
       const formData = new FormData();
@@ -37,8 +36,6 @@ const Register = () => {
       formData.append("password", data.password);
       formData.append("password_confirmation", data.confirmPassword);
 
-      console.log("Form Data Prepared");
-
       // Removed FormData console log for cleaner production code, but keeping it for debugging clarity:
       // for (let pair of formData.entries()) { console.log(`${pair[0]}: ${pair[1]}`); }
 
@@ -46,7 +43,6 @@ const Register = () => {
 
       navigate("/onboarding/company/register");
     } catch (error) {
-      console.error("Registration failed", error);
       // Set a generic user-facing error message
       setRegistrationError(
         "Registration failed. Please check your details and try again."
@@ -300,9 +296,9 @@ const Register = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="mt-4 bg-green-600 text-white p-3 rounded-lg font-semibold 
-                      hover:bg-green-700 transition duration-150 ease-in-out 
-                      focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            className="mt-4 bg-blue-600 text-white p-3 rounded-lg font-semibold 
+                      hover:bg-blue-700 transition duration-150 ease-in-out 
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             {isLoading ? "Registering..." : "Register Account"}
           </button>

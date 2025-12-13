@@ -46,8 +46,6 @@ const CompanyRegister = () => {
         storeCompanyId(response.result[0].company_id); // Store company name in context if needed
       }
 
-      console.log("Company registration response:", response);
-
       // Check the response from your API
       if (response && response.msg === "success") {
         navigate("/onboarding/branch/register");
@@ -58,7 +56,6 @@ const CompanyRegister = () => {
         );
       }
     } catch (error) {
-      console.error("Company registration error:", error);
       setSubmissionError("A network error occurred. Check your connection.");
     } finally {
       setLoading(false);

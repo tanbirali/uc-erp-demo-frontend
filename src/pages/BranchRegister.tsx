@@ -96,7 +96,6 @@ const BranchRegister = () => {
       };
 
       const response = await registerBranch(payload, token);
-      console.log("Branch registration response:", response);
 
       // Check for success based on typical API response structure
       if (response && response.msg === "success") {
@@ -108,7 +107,6 @@ const BranchRegister = () => {
         );
       }
     } catch (error: any) {
-      console.error("Branch registration failed:", error);
       setSubmissionError(
         error.message || "A network error occurred. Please try again."
       );
@@ -128,6 +126,7 @@ const BranchRegister = () => {
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
         {label}
+        <span className="text-red-500">*</span>
       </label>
       {type === "select" ? (
         <select
@@ -163,7 +162,7 @@ const BranchRegister = () => {
           })}
         />
       )}
-           {" "}
+
       {errors[id] && (
         <p className="text-red-500 text-sm mt-1">
           {errors[id]?.message?.toString() ||
@@ -192,18 +191,14 @@ const BranchRegister = () => {
       >
         {/* Header and Onboarding Step Indicator */}{" "}
         <div className="flex flex-col items-center mb-10 text-center">
-          <MapPin className="h-10 w-10 text-green-600 mb-3" />{" "}
+          <MapPin className="h-10 w-10 text-blue-600 mb-3" />{" "}
           <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">
             Register Your First Branch{" "}
           </h1>
-                   {" "}
           <p className="text-gray-500 mt-2 text-lg">
-                        Step 2 of 2: Provide the core details and location.    
-                 {" "}
+            Step 2 of 2: Provide the core details and location.
           </p>
-                 {" "}
         </div>
-               {" "}
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-8 w-full"
@@ -212,7 +207,7 @@ const BranchRegister = () => {
           <div className="border-b pb-6 border-gray-200">
             {" "}
             <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-green-600" /> Branch Details &
+              <MapPin className="h-5 w-5 text-blue-600" /> Branch Details &
               Address{" "}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -406,7 +401,6 @@ const BranchRegister = () => {
               {submissionError}
             </div>
           )}
-                    {/* Submit Button */}         {" "}
           <button
             type="submit"
             className={`mt-4 w-full p-3 rounded-lg font-semibold transition duration-150 ease-in-out 
@@ -414,7 +408,7 @@ const BranchRegister = () => {
                       ${
                         loading
                           ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500"
+                          : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
                       }`}
             disabled={loading}
           >
